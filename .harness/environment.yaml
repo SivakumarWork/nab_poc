@@ -1,0 +1,51 @@
+environment:
+  name: Production
+  identifier: production
+  orgIdentifier: default
+  projectIdentifier: default_project
+  description: Production environment for Python Hello World app
+  tags:
+    environment: production
+    cloud: aws
+    cluster: eks
+  
+  type: Production
+  
+  # Environment variables
+  variables:
+    - name: namespace
+      type: String
+      description: Kubernetes namespace for deployment
+      value: default
+    - name: cluster_name
+      type: String
+      description: EKS cluster name
+      value: nab-poc-eks
+    - name: aws_region
+      type: String
+      description: AWS region
+      value: ap-northeast-3
+  
+  # Override configuration
+  overrides:
+    manifests:
+      - manifest:
+          identifier: env_overrides
+          type: Values
+          spec:
+            store:
+              type: Inline
+              spec:
+                content: |
+                  # Environment-specific overrides
+                  replicaCount: 1
+                  image:
+                    pullPolicy: Always
+                  resources:
+                    limits:
+                      cpu: 200m
+                      memory: 256Mi
+                    requests:
+                      cpu: 100m
+                      memory: 128Mi
+

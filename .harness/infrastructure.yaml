@@ -1,0 +1,29 @@
+infrastructureDefinition:
+  name: EKS Production Infrastructure
+  identifier: eks_production
+  orgIdentifier: default
+  projectIdentifier: default_project
+  environmentRef: production
+  description: Production EKS cluster infrastructure
+  tags:
+    cloud: aws
+    platform: kubernetes
+  
+  deploymentType: Kubernetes
+  type: KubernetesDirect
+  
+  spec:
+    connectorRef: account.k8s
+    namespace: default
+    releaseName: release-<+INFRA_KEY>
+    
+    # Use the delegate with EKS access
+    delegateSelectors:
+      - helm-delegate
+    
+    # Service account with IRSA for ECR access
+    serviceAccountName: helm-delegate
+    
+    # Additional configuration
+    # automountServiceAccountToken: true
+

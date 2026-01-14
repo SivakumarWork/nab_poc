@@ -1,0 +1,56 @@
+service:
+  name: python-hello-world
+  identifier: python_hello_world
+  orgIdentifier: default
+  projectIdentifier: default_project
+  description: Python Flask Hello World application
+  tags:
+    app: python-hello-world
+    language: python
+  
+  serviceDefinition:
+    type: Kubernetes
+    spec:
+      # Manifests location - points to k8s-manifests directory
+      manifests:
+        - manifest:
+            identifier: k8s_manifests
+            type: K8sManifest
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: account.git
+                  gitFetchType: Branch
+                  branch: main
+                  paths:
+                    - k8s-manifests/
+              valuesPaths:
+                - k8s-manifests/values.yaml
+              skipResourceVersioning: false
+              enableDeclarativeRollback: false
+      
+      # Artifacts - Docker images from ECR
+      artifacts:
+        primary:
+          primaryArtifactRef: ecr_image
+          sources:
+            - identifier: ecr_image
+              type: Ecr
+              spec:
+                connectorRef: account.aws
+                region: ap-northeast-3
+                imagePath: nab-sample-app
+                tag: 7
+      
+      # Variables for the service
+      variables:
+        - name: replicas
+          type: String
+          description: Number of pod replicas
+          value: "1"
+        - name: environment_name
+          type: String
+          description: Environment name
+          value: "development"
+
