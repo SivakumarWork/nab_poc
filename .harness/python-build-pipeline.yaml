@@ -140,7 +140,7 @@ pipeline:
       type: String
       description: ECR repository name
       required: true
-      value: nab-python-hello-world
+      value: nab-sample-app
     
     - name: app_version
       type: String
