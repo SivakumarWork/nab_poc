@@ -146,7 +146,7 @@ pipeline:
       type: String
       description: Application semantic version
       required: false
-      value: 1.0.<+pipeline.sequenceId>
+      value: "1.0.0"
   
   notificationRules:
     - name: Build Success Notification
