@@ -146,7 +146,7 @@ pipeline:
       type: String
       description: Application semantic version
       required: false
-      value: 1.0.0
+      value: 1.0.<+pipeline.sequenceId>
   
   notificationRules:
     - name: Build Success Notification
@@ -158,7 +158,7 @@ pipeline:
         type: Slack
         spec:
           userGroups: []
-          webhookUrl: <+input>  # Slack webhook URL
+          webhookUrl: <+secrets.getValue("account.slack")> 
       conditions:
         - key: targetBranch
           operator: equals
