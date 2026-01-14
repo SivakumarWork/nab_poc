@@ -32,6 +32,7 @@ pipeline:
             spec:
               connectorRef: account.k8s  # Kubernetes cluster connector
               namespace: harness-delegate-ng
+              serviceAccountName: helm-delegate
               automountServiceAccountToken: true
               nodeSelector: {}
               os: Linux
