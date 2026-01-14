@@ -1,0 +1,58 @@
+inputSet:
+  name: Python Dev Build - Input Set
+  identifier: python_dev_build_inputs
+  orgIdentifier: default
+  projectIdentifier: default_project
+  pipeline:
+    identifier: python_hello_world_build_push
+    
+    # Codebase configuration
+    properties:
+      ci:
+        codebase:
+          connectorRef: account.git # Update with your connector
+          build:
+            type: branch
+            spec:
+              branch: main  # or master, develop, etc.
+    
+    # Stage inputs
+    stages:
+      - stage:
+          identifier: build_and_push_python
+          type: CI
+          spec:
+            infrastructure:
+              type: KubernetesDirect
+              spec:
+                connectorRef: account.k8s # Update with your EKS connector name
+            execution:
+              steps:
+                - step:
+                    identifier: build_push_python_ecr
+                    type: BuildAndPushECR
+                    spec:
+                      connectorRef: account.aws  # Update with your AWS connector
+    
+    # Pipeline variables
+    variables:
+      - name: aws_account_id
+        type: String
+        value: "160071257600"  # UPDATE: Replace with your AWS account ID
+      
+      - name: aws_region
+        type: String
+        value: "ap-northeast-3"
+      
+      - name: ecr_repository_name
+        type: String
+        value: "nab-sample-app"
+      
+      - name: app_version
+        type: String
+        value: "1.0.<+pipeline.sequenceId>"
+  
+  tags:
+    environment: development
+    application: python-hello-world
+

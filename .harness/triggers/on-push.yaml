@@ -1,0 +1,43 @@
+trigger:
+  name: Build on Push to Main
+  identifier: build_on_push_main
+  enabled: true
+  description: Automatically trigger build when code is pushed to main branch
+  orgIdentifier: default
+  projectIdentifier: default_project
+  pipelineIdentifier: nab_sample_app_build_push
+  
+  source:
+    type: Webhook
+    spec:
+      type: Github  # Change to GitLab if using GitLab
+      spec:
+        type: Push
+        spec:
+          connectorRef: account.git  # Your Git connector reference
+          autoAbortPreviousExecutions: true
+          payloadConditions:
+            - key: targetBranch
+              operator: Equals
+              value: main
+          headerConditions: []
+          jexlCondition: <+trigger.payload.repository.full_name> == "SivakumarWork/nab_poc"
+  
+  inputYaml: |
+    pipeline:
+      identifier: nab_sample_app_build_push
+      variables:
+        - name: ecr_repository
+          type: String
+          value: "160071257600.dkr.ecr.ap-northeast-3.amazonaws.com/nab-sample-app"
+        - name: app_version
+          type: String
+          value: "1.0.<+trigger.commitSha>"
+      properties:
+        ci:
+          codebase:
+            build:
+              type: branch
+              spec:
+                branch: <+trigger.branch>
+

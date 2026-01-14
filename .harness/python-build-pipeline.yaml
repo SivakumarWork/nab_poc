@@ -1,0 +1,178 @@
+pipeline:
+  name: Python Hello World - Build and Push to ECR
+  identifier: python_hello_world_build_push
+  projectIdentifier: default_project
+  orgIdentifier: default
+  tags:
+    app: python-hello-world
+    environment: development
+    language: python
+  
+  properties:
+    ci:
+      codebase:
+        connectorRef: account.git  # GitHub/GitLab/Bitbucket connector
+        repoName: nab_poc
+        build:
+          type: branch
+          spec:
+            branch: main
+  
+  stages:
+    - stage:
+        name: Build and Push Python App to ECR
+        identifier: build_and_push_python
+        description: Build Python Docker image and push to AWS ECR
+        type: CI
+        spec:
+          cloneCodebase: true
+          
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: account.k8s  # Kubernetes cluster connector
+              namespace: harness-delegate-ng
+              automountServiceAccountToken: true
+              nodeSelector: {}
+              os: Linux
+          
+          execution:
+            steps:
+              # Step 1: Install dependencies and run unit tests
+              - step:
+                  type: Run
+                  name: Run Python Unit Tests
+                  identifier: run_python_tests
+                  spec:
+                    connectorRef: account.harnessImage  # Harness Docker Hub connector
+                    image: python:3.11-slim
+                    shell: Sh
+                    command: |-
+                      cd sample-app
+                      echo "Installing dependencies..."
+                      pip install -r requirements.txt
+                      
+                      echo "Running unit tests..."
+                      pytest -v test_app.py
+                      
+                      echo "Tests completed successfully!"
+                    resources:
+                      limits:
+                        memory: 1Gi
+                        cpu: "1"
+              
+              # Step 2: Build and push Docker image to ECR
+              - step:
+                  type: BuildAndPushECR
+                  name: Build and Push Python Image to ECR
+                  identifier: build_push_python_ecr
+                  spec:
+                    connectorRef: account.aws  # AWS connector with IRSA
+                    region: <+pipeline.variables.aws_region>
+                    account: <+pipeline.variables.aws_account_id>
+                    imageName: <+pipeline.variables.ecr_repository_name>
+                    tags:
+                      - <+pipeline.sequenceId>
+                      - latest
+                      - v<+pipeline.variables.app_version>
+                    dockerfile: sample-app/Dockerfile
+                    context: sample-app
+                    buildArgs:
+                      APP_VERSION: <+pipeline.variables.app_version>
+                    labels:
+                      build_number: "<+pipeline.sequenceId>"
+                      git_commit: "<+codebase.commitSha>"
+                      git_branch: "<+codebase.branch>"
+                      app_name: "python-hello-world"
+                      build_date: "<+pipeline.startTs>"
+                    resources:
+                      limits:
+                        memory: 2Gi
+                        cpu: "2"
+              
+              # Step 3: Verify image was pushed
+              - step:
+                  type: Run
+                  name: Verify ECR Image
+                  identifier: verify_ecr_image
+                  spec:
+                    connectorRef: account.harnessImage
+                    image: amazon/aws-cli:latest
+                    shell: Sh
+                    command: |-
+                      echo "Verifying image in ECR..."
+                      aws ecr describe-images \
+                        --region <+pipeline.variables.aws_region> \
+                        --repository-name <+pipeline.variables.ecr_repository_name> \
+                        --image-ids imageTag=<+pipeline.sequenceId>
+                      
+                      echo "Image verified successfully!"
+                    envVariables:
+                      AWS_REGION: <+pipeline.variables.aws_region>
+                    resources:
+                      limits:
+                        memory: 512Mi
+                        cpu: "0.5"
+              
+          serviceDependencies: []
+        
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: MarkAsFailure
+  
+  variables:
+    - name: aws_account_id
+      type: String
+      description: AWS Account ID
+      required: true
+      value: 160071257600
+    
+    - name: aws_region
+      type: String
+      description: AWS region where ECR is located
+      required: true
+      value: ap-northeast-3
+    
+    - name: ecr_repository_name
+      type: String
+      description: ECR repository name
+      required: true
+      value: nab-python-hello-world
+    
+    - name: app_version
+      type: String
+      description: Application semantic version
+      required: true
+      value: <+input>.default(1.0.<+pipeline.sequenceId>)
+  
+  notificationRules:
+    - name: Build Success Notification
+      identifier: build_success
+      enabled: true
+      pipelineEvents:
+        - type: PipelineSuccess
+      notificationMethod:
+        type: Slack
+        spec:
+          userGroups: []
+          webhookUrl: <+input>  # Slack webhook URL
+      conditions:
+        - key: targetBranch
+          operator: equals
+          value: main
+    
+    - name: Build Failure Notification
+      identifier: build_failure
+      enabled: true
+      pipelineEvents:
+        - type: PipelineFailed
+      notificationMethod:
+        type: Email
+        spec:
+          userGroups: []
+          recipients:
+            - <+pipeline.triggeredBy.email>
+
