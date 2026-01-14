@@ -128,7 +128,7 @@ pipeline:
       type: String
       description: AWS Account ID
       required: true
-      value: 160071257600
+      value: "160071257600"
     
     - name: aws_region
       type: String
