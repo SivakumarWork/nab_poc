@@ -5,6 +5,10 @@ metadata:
   namespace: default
   labels:
     app: python-hello-world
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
 spec:
   type: LoadBalancer
   selector:
@@ -15,4 +19,3 @@ spec:
     targetPort: 8080
     protocol: TCP
   sessionAffinity: None
-
