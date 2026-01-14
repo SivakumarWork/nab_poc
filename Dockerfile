@@ -29,23 +29,25 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Copy dependencies from builder
-COPY --from=builder /root/.local /root/.local
+# Create non-root user first
+RUN groupadd -r appuser && \
+    useradd -r -g appuser -u 1001 appuser
+
+# Copy dependencies from builder to a location accessible by appuser
+COPY --from=builder /root/.local /home/appuser/.local
 
 # Copy application code
 COPY app.py .
 COPY requirements.txt .
 
-# Create non-root user
-RUN groupadd -r appuser && \
-    useradd -r -g appuser -u 1001 appuser && \
-    chown -R appuser:appuser /app
+# Change ownership of all files to appuser
+RUN chown -R appuser:appuser /app /home/appuser/.local
 
 # Switch to non-root user
 USER appuser
 
 # Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
+ENV PATH=/home/appuser/.local/bin:$PATH
 
 # Expose port
 EXPOSE 8080
@@ -56,4 +58,3 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Start application with gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "60", "app:app"]
-
