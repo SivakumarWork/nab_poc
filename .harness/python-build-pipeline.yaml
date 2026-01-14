@@ -48,7 +48,7 @@ pipeline:
                     image: python:3.11-slim
                     shell: Sh
                     command: |-
-                      cd sample-app
+                      cd nab_poc
                       echo "Installing dependencies..."
                       pip install -r requirements.txt
                       
@@ -75,8 +75,8 @@ pipeline:
                       - <+pipeline.sequenceId>
                       - latest
                       - v<+pipeline.variables.app_version>
-                    dockerfile: sample-app/Dockerfile
-                    context: sample-app
+                    dockerfile: nab_poc/Dockerfile
+                    context: nab_poc
                     buildArgs:
                       APP_VERSION: <+pipeline.variables.app_version>
                     labels:
