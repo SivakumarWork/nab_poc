@@ -44,7 +44,7 @@ pipeline:
                   name: Run Python Unit Tests
                   identifier: run_python_tests
                   spec:
-                    connectorRef: account.harnessImage  # Harness Docker Hub connector
+                    connectorRef: account.docker  
                     image: python:3.11-slim
                     shell: Sh
                     command: |-
@@ -96,7 +96,7 @@ pipeline:
                   name: Verify ECR Image
                   identifier: verify_ecr_image
                   spec:
-                    connectorRef: account.harnessImage
+                    connectorRef: account.docker
                     image: amazon/aws-cli:latest
                     shell: Sh
                     command: |-
