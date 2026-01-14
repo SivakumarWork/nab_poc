@@ -1,0 +1,8 @@
+environment:
+  name: nab_poc
+  identifier: nab_poc
+  description: ""
+  tags: {}
+  type: PreProduction
+  orgIdentifier: default
+  projectIdentifier: default_project
