@@ -144,8 +144,8 @@ pipeline:
     - name: app_version
       type: String
       description: Application semantic version
-      required: true
-      value: <+input>.default(1.0.<+pipeline.sequenceId>)
+      required: false
+      value: 1.0.0
   
   notificationRules:
     - name: Build Success Notification
